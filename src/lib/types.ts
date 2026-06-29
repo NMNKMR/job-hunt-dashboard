@@ -2,7 +2,7 @@ export type SeniorityMatch = 'under' | 'match' | 'over'
 
 export type JobStatus = 'all' | 'bookmarked' | 'applied' | 'rejected'
 
-export type JobSource = 'jsearch_fe' | 'jsearch_be' | 'jsearch_ai' | 'remoteok'
+export type JobSource = 'jsearch_fe' | 'jsearch_be' | 'jsearch_ai'
 
 export interface Job {
   id: string

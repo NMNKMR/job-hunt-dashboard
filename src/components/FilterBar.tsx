@@ -116,7 +116,6 @@ export function FilterBar({ filters, onChange, totalCount }: FilterBarProps) {
           <SelectItem value="jsearch_fe">FE</SelectItem>
           <SelectItem value="jsearch_be">BE</SelectItem>
           <SelectItem value="jsearch_ai">AI</SelectItem>
-          <SelectItem value="remoteok">RemoteOK</SelectItem>
         </SelectContent>
       </Select>
 

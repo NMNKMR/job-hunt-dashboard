@@ -19,10 +19,6 @@ const SOURCE_CONFIG: Record<string, { label: string; className: string }> = {
     label: 'AI',
     className: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
   },
-  remoteok: {
-    label: 'Remote',
-    className: 'bg-teal-500/15 text-teal-400 border-teal-500/30',
-  },
 }
 
 export function SourcePill({ source }: SourcePillProps) {
