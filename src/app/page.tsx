@@ -1,65 +1,133 @@
-import Image from "next/image";
+'use client'
 
-export default function Home() {
+import { useCallback, useEffect, useState } from 'react'
+import { FilterBar, DEFAULT_FILTERS } from '@/components/FilterBar'
+import { JobDrawer } from '@/components/JobDrawer'
+import { JobsTable } from '@/components/JobsTable'
+import { StatsBar } from '@/components/StatsBar'
+import { Job, JobFilters, JobUpdatePayload } from '@/lib/types'
+
+function applyOptimisticUpdate(job: Job, payload: JobUpdatePayload): Job {
+  const updated = { ...job, ...payload }
+
+  if ('applied' in payload) {
+    updated.applied_at = payload.applied ? new Date().toISOString() : null
+  }
+  if ('bookmarked' in payload) {
+    updated.bookmarked_at = payload.bookmarked
+      ? new Date().toISOString()
+      : null
+  }
+  if ('rejected' in payload) {
+    updated.rejected_at = payload.rejected ? new Date().toISOString() : null
+    if (payload.rejected) {
+      updated.applied = false
+      updated.bookmarked = false
+      updated.applied_at = null
+      updated.bookmarked_at = null
+    }
+  }
+
+  return updated
+}
+
+export default function HomePage() {
+  const [jobs, setJobs] = useState<Job[]>([])
+  const [loading, setLoading] = useState(true)
+  const [filters, setFilters] = useState<JobFilters>(DEFAULT_FILTERS)
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null)
+  const [drawerOpen, setDrawerOpen] = useState(false)
+
+  const fetchJobs = useCallback(async (f: JobFilters) => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams({
+        status: f.status,
+        minScore: f.minScore.toString(),
+        remote: f.remote.toString(),
+        source: f.source,
+        search: f.search,
+      })
+      const res = await fetch(`/api/jobs?${params}`)
+      const data = await res.json()
+      if (Array.isArray(data)) {
+        setJobs(data)
+      }
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchJobs(filters)
+  }, [filters, fetchJobs])
+
+  async function handleUpdate(id: string, payload: JobUpdatePayload) {
+    const previousJobs = jobs
+    const previousSelected = selectedJob
+
+    setJobs((prev) =>
+      prev.map((j) => (j.id === id ? applyOptimisticUpdate(j, payload) : j))
+    )
+    if (selectedJob?.id === id) {
+      setSelectedJob(applyOptimisticUpdate(selectedJob, payload))
+    }
+
+    try {
+      const res = await fetch(`/api/jobs/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      if (!res.ok) throw new Error('Update failed')
+      const updated = await res.json()
+      setJobs((prev) => prev.map((j) => (j.id === id ? updated : j)))
+      if (selectedJob?.id === id) setSelectedJob(updated)
+    } catch {
+      setJobs(previousJobs)
+      setSelectedJob(previousSelected)
+    }
+  }
+
+  function handleRowClick(job: Job) {
+    setSelectedJob(job)
+    setDrawerOpen(true)
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <main className="min-h-screen bg-base-bg text-text-primary">
+      <header className="flex items-center justify-between border-b border-base-border px-6 py-4">
+        <div>
+          <h1 className="text-lg font-semibold">Job Hunt</h1>
+          <p className="text-sm text-text-secondary">AI-scored job pipeline</p>
+        </div>
+        <StatsBar jobs={jobs} />
+      </header>
+
+      <div className="border-b border-base-border px-6 py-3">
+        <FilterBar
+          filters={filters}
+          onChange={setFilters}
+          totalCount={jobs.length}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+      </div>
+
+      <div className="px-6 py-4">
+        <JobsTable
+          jobs={jobs}
+          loading={loading}
+          onRowClick={handleRowClick}
+          onUpdate={handleUpdate}
+          onResetFilters={() => setFilters(DEFAULT_FILTERS)}
+        />
+      </div>
+
+      <JobDrawer
+        job={selectedJob}
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        onUpdate={handleUpdate}
+      />
+    </main>
+  )
 }

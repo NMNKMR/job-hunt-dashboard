@@ -23,6 +23,7 @@
 # misc
 .DS_Store
 *.pem
+job-hunt-frontend-plan.md
 
 # debug
 npm-debug.log*
