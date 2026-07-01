@@ -19,7 +19,10 @@ export async function GET(req: NextRequest) {
   else if (status === 'applied') query = query.eq('applied', true)
   else if (status === 'rejected') query = query.eq('rejected', true)
   else {
-    query = query.eq('rejected', false)
+    query = query
+      .eq('applied', false)
+      .eq('bookmarked', false)
+      .eq('rejected', false)
   }
 
   if (minScore > 0) query = query.gte('score', minScore)

@@ -21,7 +21,7 @@ interface FilterBarProps {
 }
 
 const STATUS_TABS: { value: JobStatus; label: string }[] = [
-  { value: 'all', label: 'All' },
+  { value: 'all', label: 'New' },
   { value: 'bookmarked', label: 'Bookmarked' },
   { value: 'applied', label: 'Applied' },
   { value: 'rejected', label: 'Rejected' },
@@ -56,14 +56,19 @@ export function FilterBar({ filters, onChange, totalCount }: FilterBarProps) {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-4">
+    <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-center">
       <Tabs
         value={filters.status}
         onValueChange={(value) => update({ status: value as JobStatus })}
+        className="w-full lg:w-auto"
       >
-        <TabsList variant="line">
+        <TabsList variant="line" className="w-full justify-start overflow-x-auto">
           {STATUS_TABS.map((tab) => (
-            <TabsTrigger key={tab.value} value={tab.value}>
+            <TabsTrigger
+              key={tab.value}
+              value={tab.value}
+              className="cursor-pointer shrink-0"
+            >
               {tab.label}
             </TabsTrigger>
           ))}
@@ -74,10 +79,10 @@ export function FilterBar({ filters, onChange, totalCount }: FilterBarProps) {
         placeholder="Search title or company…"
         value={searchInput}
         onChange={(e) => setSearchInput(e.target.value)}
-        className="h-8 w-56 border-base-border bg-base-surface"
+        className="h-8 w-full border-base-border bg-base-surface sm:w-56"
       />
 
-      <div className="flex w-40 flex-col gap-1">
+      <div className="flex w-full flex-col gap-1 sm:w-40">
         <span className="text-xs text-text-secondary">
           Score ≥ {filters.minScore}
         </span>
@@ -98,8 +103,12 @@ export function FilterBar({ filters, onChange, totalCount }: FilterBarProps) {
           id="remote-toggle"
           checked={filters.remote}
           onCheckedChange={(checked) => update({ remote: checked })}
+          className="cursor-pointer"
         />
-        <label htmlFor="remote-toggle" className="text-sm text-text-secondary">
+        <label
+          htmlFor="remote-toggle"
+          className="cursor-pointer text-sm text-text-secondary"
+        >
           Remote only
         </label>
       </div>
@@ -108,7 +117,7 @@ export function FilterBar({ filters, onChange, totalCount }: FilterBarProps) {
         value={filters.source}
         onValueChange={(value) => update({ source: value ?? 'all' })}
       >
-        <SelectTrigger className="h-8 border-base-border bg-base-surface">
+        <SelectTrigger className="h-8 w-full cursor-pointer border-base-border bg-base-surface sm:w-fit">
           <SelectValue placeholder="Source" />
         </SelectTrigger>
         <SelectContent>
@@ -119,7 +128,7 @@ export function FilterBar({ filters, onChange, totalCount }: FilterBarProps) {
         </SelectContent>
       </Select>
 
-      <span className="ml-auto text-sm text-text-secondary">
+      <span className="text-sm text-text-secondary lg:ml-auto">
         {totalCount} jobs
       </span>
     </div>

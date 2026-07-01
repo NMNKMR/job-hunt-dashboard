@@ -73,7 +73,7 @@ export function JobsTable({
           <Button
             variant="ghost"
             size="sm"
-            className="-ml-2 h-8 text-text-secondary"
+            className="-ml-2 h-8 cursor-pointer text-text-secondary"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           >
             Score
@@ -101,7 +101,7 @@ export function JobsTable({
         accessorKey: 'title',
         header: 'Role',
         cell: ({ row }) => (
-          <span className="block max-w-xs truncate text-sm text-text-primary">
+          <span className="block max-w-xs cursor-pointer truncate text-sm text-text-primary">
             {row.original.title}
           </span>
         ),
@@ -178,7 +178,7 @@ export function JobsTable({
         <p className="text-text-secondary">No jobs match your filters</p>
         <Button
           variant="outline"
-          className="border-base-border"
+          className="cursor-pointer border-base-border"
           onClick={onResetFilters}
         >
           Adjust filters
@@ -188,7 +188,7 @@ export function JobsTable({
   }
 
   return (
-    <div className="rounded-lg border border-base-border">
+    <div className="overflow-x-auto rounded-lg border border-base-border">
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (

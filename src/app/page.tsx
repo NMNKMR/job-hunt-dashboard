@@ -31,6 +31,10 @@ function applyOptimisticUpdate(job: Job, payload: JobUpdatePayload): Job {
   return updated
 }
 
+function hasUserAction(job: Job): boolean {
+  return job.applied || job.bookmarked || job.rejected
+}
+
 export default function HomePage() {
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
@@ -65,12 +69,20 @@ export default function HomePage() {
   async function handleUpdate(id: string, payload: JobUpdatePayload) {
     const previousJobs = jobs
     const previousSelected = selectedJob
+    const job = jobs.find((j) => j.id === id)
+    const optimistic = job ? applyOptimisticUpdate(job, payload) : null
 
-    setJobs((prev) =>
-      prev.map((j) => (j.id === id ? applyOptimisticUpdate(j, payload) : j))
-    )
-    if (selectedJob?.id === id) {
-      setSelectedJob(applyOptimisticUpdate(selectedJob, payload))
+    if (filters.status === 'all' && optimistic && hasUserAction(optimistic)) {
+      setJobs((prev) => prev.filter((j) => j.id !== id))
+      if (selectedJob?.id === id) {
+        setSelectedJob(null)
+        setDrawerOpen(false)
+      }
+    } else if (optimistic) {
+      setJobs((prev) =>
+        prev.map((j) => (j.id === id ? optimistic : j))
+      )
+      if (selectedJob?.id === id) setSelectedJob(optimistic)
     }
 
     try {
@@ -81,8 +93,12 @@ export default function HomePage() {
       })
       if (!res.ok) throw new Error('Update failed')
       const updated = await res.json()
-      setJobs((prev) => prev.map((j) => (j.id === id ? updated : j)))
-      if (selectedJob?.id === id) setSelectedJob(updated)
+      if (filters.status === 'all' && hasUserAction(updated)) {
+        setJobs((prev) => prev.filter((j) => j.id !== id))
+      } else {
+        setJobs((prev) => prev.map((j) => (j.id === id ? updated : j)))
+        if (selectedJob?.id === id) setSelectedJob(updated)
+      }
     } catch {
       setJobs(previousJobs)
       setSelectedJob(previousSelected)
@@ -96,15 +112,15 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-base-bg text-text-primary">
-      <header className="flex items-center justify-between border-b border-base-border px-6 py-4">
-        <div>
+      <header className="flex flex-col gap-4 border-b border-base-border px-4 py-4 sm:px-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <h1 className="text-lg font-semibold">Job Hunt</h1>
           <p className="text-sm text-text-secondary">AI-scored job pipeline</p>
         </div>
         <StatsBar jobs={jobs} />
       </header>
 
-      <div className="border-b border-base-border px-6 py-3">
+      <div className="border-b border-base-border px-4 py-3 sm:px-6">
         <FilterBar
           filters={filters}
           onChange={setFilters}
@@ -112,7 +128,7 @@ export default function HomePage() {
         />
       </div>
 
-      <div className="px-6 py-4">
+      <div className="px-4 py-4 sm:px-6">
         <JobsTable
           jobs={jobs}
           loading={loading}

@@ -10,6 +10,15 @@ interface StatusButtonsProps {
   onUpdate: (id: string, payload: JobUpdatePayload) => void
 }
 
+function ActiveDot({ className }: { className: string }) {
+  return (
+    <span
+      className={cn('size-4 shrink-0 rounded-full', className)}
+      aria-hidden
+    />
+  )
+}
+
 export function StatusButtons({ job, onUpdate }: StatusButtonsProps) {
   async function handleToggle(
     field: 'bookmarked' | 'applied' | 'rejected',
@@ -31,37 +40,40 @@ export function StatusButtons({ job, onUpdate }: StatusButtonsProps) {
         variant="ghost"
         size="icon-sm"
         onClick={() => handleToggle('bookmarked', job.bookmarked)}
-        className={cn(
-          'text-text-secondary hover:text-indigo-400',
-          job.bookmarked && 'text-indigo-400'
-        )}
-        title="Bookmark"
+        className="cursor-pointer text-text-secondary hover:text-indigo-400"
+        title={job.bookmarked ? 'Remove bookmark' : 'Bookmark'}
       >
-        <Bookmark className={cn('size-4', job.bookmarked && 'fill-current')} />
+        {job.bookmarked ? (
+          <ActiveDot className="bg-indigo-400" />
+        ) : (
+          <Bookmark className="size-4" />
+        )}
       </Button>
       <Button
         variant="ghost"
         size="icon-sm"
         onClick={() => handleToggle('applied', job.applied)}
-        className={cn(
-          'text-text-secondary hover:text-green-400',
-          job.applied && 'text-green-400'
-        )}
-        title="Applied"
+        className="cursor-pointer text-text-secondary hover:text-green-400"
+        title={job.applied ? 'Mark not applied' : 'Applied'}
       >
-        <CheckCircle className={cn('size-4', job.applied && 'fill-current')} />
+        {job.applied ? (
+          <ActiveDot className="bg-green-400" />
+        ) : (
+          <CheckCircle className="size-4" />
+        )}
       </Button>
       <Button
         variant="ghost"
         size="icon-sm"
         onClick={() => handleToggle('rejected', job.rejected)}
-        className={cn(
-          'text-text-secondary hover:text-red-400',
-          job.rejected && 'text-red-400'
-        )}
-        title="Reject"
+        className="cursor-pointer text-text-secondary hover:text-red-400"
+        title={job.rejected ? 'Remove rejection' : 'Reject'}
       >
-        <XCircle className={cn('size-4', job.rejected && 'fill-current')} />
+        {job.rejected ? (
+          <ActiveDot className="bg-red-400" />
+        ) : (
+          <XCircle className="size-4" />
+        )}
       </Button>
     </div>
   )

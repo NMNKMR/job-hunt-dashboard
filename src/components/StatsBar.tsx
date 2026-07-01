@@ -29,7 +29,7 @@ export function StatsBar({ jobs }: StatsBarProps) {
   ]
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center sm:gap-3">
       {stats.map((stat) => (
         <div
           key={stat.label}
