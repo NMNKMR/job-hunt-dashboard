@@ -49,3 +49,17 @@ export interface JobUpdatePayload {
   rejected?: boolean
   notes?: string
 }
+
+export interface JobStats {
+  new: number
+  bookmarked: number
+  applied: number
+  rejected: number
+}
+
+export const EMPTY_JOB_STATS: JobStats = {
+  new: 0,
+  bookmarked: 0,
+  applied: 0,
+  rejected: 0,
+}

@@ -5,7 +5,7 @@ import { FilterBar, DEFAULT_FILTERS } from '@/components/FilterBar'
 import { JobDrawer } from '@/components/JobDrawer'
 import { JobsTable } from '@/components/JobsTable'
 import { StatsBar } from '@/components/StatsBar'
-import { Job, JobFilters, JobUpdatePayload } from '@/lib/types'
+import { Job, JobFilters, JobUpdatePayload, JobStats, EMPTY_JOB_STATS } from '@/lib/types'
 
 function applyOptimisticUpdate(job: Job, payload: JobUpdatePayload): Job {
   const updated = { ...job, ...payload }
@@ -37,10 +37,23 @@ function hasUserAction(job: Job): boolean {
 
 export default function HomePage() {
   const [jobs, setJobs] = useState<Job[]>([])
+  const [stats, setStats] = useState<JobStats>(EMPTY_JOB_STATS)
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState<JobFilters>(DEFAULT_FILTERS)
   const [selectedJob, setSelectedJob] = useState<Job | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const res = await fetch('/api/jobs/stats')
+      const data = await res.json()
+      if (res.ok && data && typeof data.new === 'number') {
+        setStats(data)
+      }
+    } catch {
+      // keep previous stats on failure
+    }
+  }, [])
 
   const fetchJobs = useCallback(async (f: JobFilters) => {
     setLoading(true)
@@ -65,6 +78,10 @@ export default function HomePage() {
   useEffect(() => {
     fetchJobs(filters)
   }, [filters, fetchJobs])
+
+  useEffect(() => {
+    fetchStats()
+  }, [fetchStats])
 
   async function handleUpdate(id: string, payload: JobUpdatePayload) {
     const previousJobs = jobs
@@ -99,6 +116,7 @@ export default function HomePage() {
         setJobs((prev) => prev.map((j) => (j.id === id ? updated : j)))
         if (selectedJob?.id === id) setSelectedJob(updated)
       }
+      fetchStats()
     } catch {
       setJobs(previousJobs)
       setSelectedJob(previousSelected)
@@ -117,7 +135,13 @@ export default function HomePage() {
           <h1 className="text-lg font-semibold">Job Hunt</h1>
           <p className="text-sm text-text-secondary">AI-scored job pipeline</p>
         </div>
-        <StatsBar jobs={jobs} />
+        <StatsBar
+          stats={stats}
+          activeStatus={filters.status}
+          onStatusClick={(status) =>
+            setFilters((prev) => ({ ...prev, status }))
+          }
+        />
       </header>
 
       <div className="border-b border-base-border px-4 py-3 sm:px-6">
